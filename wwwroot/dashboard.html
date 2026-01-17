@@ -1,0 +1,357 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Học Tập Thông Minh - AI Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-image: url('https://motionbgs.com/media/5384/gojo-vs-sukuna.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+
+            /* 2. Lớp phủ (Overlay) để làm tối/mờ ảnh nền giúp nổi bật nội dung */
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(240, 242, 245, 0.11); 
+                z-index: -1; /* Đẩy xuống dưới cùng */
+            }
+
+        /* 3. Đảm bảo container nổi lên trên */
+        .container {
+            position: relative;
+            z-index: 1; /* Nổi trên lớp overlay */
+        }
+
+        /* 4. Làm cho các Card video hơi trong suốt một chút cho sang */
+        .video-card {
+            background: rgba(255, 255, 255, 0.9) !important; /* Trắng 90% để thấy mờ mờ nền */
+            backdrop-filter: blur(5px); /* Hiệu ứng kính mờ (Glassmorphism) */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 1000px;
+        }
+
+        /* Video Card Styles */
+        .video-card {
+            background: white;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            margin-bottom: 25px;
+            padding: 20px;
+        }
+
+            .video-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            }
+
+        .summary-content {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #065fd4;
+            margin-top: 15px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Floating Chat Icon */
+        #chat-launcher {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 65px;
+            height: 65px;
+            background: #065fd4;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 6px 16px rgba(6, 95, 212, 0.4);
+            transition: 0.3s;
+        }
+
+            #chat-launcher:hover {
+                transform: scale(1.1);
+                background: #054fb1;
+            }
+
+        /* Ask Panel (Chatbox) */
+        #ask-panel {
+            position: fixed;
+            bottom: 110px;
+            right: 30px;
+            width: 380px;
+            height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9998;
+            border: 1px solid #e0e0e0;
+        }
+
+        .chat-header {
+            background: #065fd4;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        #chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Message Bubbles */
+        .bot-msg, .user-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .bot-msg {
+            background: #fff;
+            color: #222;
+            align-self: flex-start;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .user-msg {
+            background: #065fd4;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        #user-question {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #send-btn {
+            background: #065fd4;
+            color: white;
+            border: none;
+            padding: 0 18px;
+            margin-left: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+            #send-btn:hover {
+                background: #054fb1;
+            }
+
+        .loading-dots {
+            font-style: italic;
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="my-4 text-center">📚 Kho Tri Thức AI hệ hệ</h1>
+        <hr>
+        <div id="loading" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Đang nạp dữ liệu từ bộ não...</p>
+        </div>
+        <div id="video-list" class="row"></div>
+    </div>
+
+    <div id="chat-launcher" onclick="toggleChat()">🧠</div>
+
+    <div id="ask-panel">
+        <div class="chat-header">
+            <span>🚀 Trợ lý Tri thức AI</span>
+            <button class="btn btn-sm btn-light" onclick="toggleChat()">—</button>
+        </div>
+        <div id="chat-content">
+            <div class="bot-msg">Chào bro! Tôi đã sẵn sàng. Bro muốn hỏi gì về đống kiến thức ma trận hay video đã xem không?</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="user-question" placeholder="Nhập câu hỏi tại đây...">
+            <button id="send-btn">Gửi</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. TẢI LỊCH SỬ VIDEO
+        async function loadHistory() {
+            try {
+                // Đảm bảo URL này khớp với API Python của bro
+                const response = await fetch('http://127.0.0.1:8000/api/video/history');
+                const data = await response.json();
+
+                const list = document.getElementById('video-list');
+                document.getElementById('loading').style.display = 'none';
+
+                data.forEach(video => {
+                    // Dùng marked để render Markdown cho đẹp
+                    const renderedSummary = marked.parse(video.summary || "Chưa có tóm tắt.");
+
+                    const card = `
+                                <div class="col-md-12">
+                                    <div class="card video-card">
+                                        <h3 class="text-primary">${video.title}</h3>
+                                        <p class="text-muted small">ID: ${video.videoId} | 📅 ${new Date(video.createdAt).toLocaleString('vi-VN')}</p>
+                                        <div class="summary-content">${renderedSummary}</div>
+                                    </div>
+                                </div>`;
+                    list.innerHTML += card;
+                });
+
+                if (window.MathJax) MathJax.typeset();
+            } catch (error) {
+                console.error("Lỗi rồi bro:", error);
+                document.getElementById('loading').innerHTML = `<div class="alert alert-danger">Không kết nối được API. Nhớ chạy Uvicorn nhé bro!</div>`;
+            }
+        }
+
+        // 2. XỬ LÝ CHAT RAG
+        function toggleChat() {
+            const panel = document.getElementById('ask-panel');
+            panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'flex' : 'none';
+        }
+
+        const sendBtn = document.getElementById('send-btn');
+        const input = document.getElementById('user-question');
+        const chatContent = document.getElementById('chat-content');
+
+        sendBtn.onclick = async () => {
+            const q = input.value.trim();
+            if (!q) return;
+
+            console.log("🚀 Đang gửi câu hỏi:", q);
+
+            // 1. Hiển thị tin nhắn của User
+            chatContent.innerHTML += `<div class="user-msg">${q}</div>`;
+            input.value = '';
+
+            // 2. Tạo hiệu ứng Loading với ID duy nhất
+            const loadingId = "load-" + Date.now();
+            chatContent.innerHTML += `<div class="bot-msg" id="${loadingId}"><i>🧠 AI đang lục lại trí nhớ...</i></div>`;
+            chatContent.scrollTop = chatContent.scrollHeight;
+
+            try {
+                // 3. Thực hiện gọi API (Lệnh này phải chạy trước)
+                const res = await fetch('http://127.0.0.1:8000/ai/ask-anything', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: q })
+                });
+
+                if (!res.ok) throw new Error("Server Python đang bận hoặc lỗi!");
+
+                const data = await res.json();
+
+                // 4. Xóa hiệu ứng Loading sau khi có dữ liệu
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.remove();
+
+                // 5. Xử lý hiển thị kết quả
+                if (data.answer === "QUOTA_EXCEEDED") {
+                    // Hiển thị thông báo thân thiện khi hết lượt dùng
+                    chatContent.innerHTML += `
+                <div class="bot-msg" style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; padding: 10px;">
+                    ⚠️ <b>Hệ thống đang bận:</b> Xin hãy thử lại sau ít phút nữa bro nhé!
+                </div>`;
+                } else if (data.answer) {
+                    // Render Markdown cho câu trả lời sạch rác
+                    const finalHtml = (typeof marked !== 'undefined') ? marked.parse(data.answer) : data.answer;
+                    chatContent.innerHTML += `<div class="bot-msg">${finalHtml}</div>`;
+
+                    // Nếu có công thức toán học thì bảo MathJax quét lại
+                    if (window.MathJax) MathJax.typeset();
+                } else {
+                    chatContent.innerHTML += `<div class="bot-msg" style="color:red">⚠️ Lỗi AI: ${data.error || "Không có phản hồi"}</div>`;
+                }
+
+            } catch (err) {
+                console.error("❌ Lỗi Fetch:", err);
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) {
+                    loadingEl.style.color = "red";
+                    loadingEl.innerHTML = "❌ Không thể kết nối Backend. Bro check Uvicorn chưa?";
+                }
+            }
+
+            // Luôn luôn cuộn xuống cuối cùng
+            chatContent.scrollTop = chatContent.scrollHeight;
+        };
+        // Nhấn Enter để gửi
+        input.addEventListener("keypress", (e) => { if (e.key === "Enter") sendBtn.click(); });
+
+        // Khởi chạy
+        loadHistory();
+    </script>
+</body>
+</html>
