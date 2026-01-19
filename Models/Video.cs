@@ -17,6 +17,7 @@ namespace YoutubeLearningAssistant.Api.Models
 
         public string Transcript { get; set; } = string.Empty;
 
+        [Column(TypeName = "longtext")]
         public string Summary { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;

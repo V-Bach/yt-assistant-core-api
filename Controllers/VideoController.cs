@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Json; // Thư viện quan trọng để gửi JSON
+using System.Net.Http.Json; 
 using YoutubeLearningAssistant.Api.Data;
 using YoutubeLearningAssistant.Api.Models;
+using System.Text.Json.Serialization;
 
 namespace YoutubeLearningAssistant.Api.Controllers
 {
@@ -11,69 +12,42 @@ namespace YoutubeLearningAssistant.Api.Controllers
     public class VideoController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IHttpClientFactory _httpClientFactory;
 
-        // Inject thêm IHttpClientFactory để quản lý việc gọi API ra ngoài
-        public VideoController(AppDbContext context, IHttpClientFactory httpClientFactory)
+        public VideoController(AppDbContext context)
         {
             _context = context;
-            _httpClientFactory = httpClientFactory;
         }
 
-        [HttpPost("analyze")]
-        public async Task<IActionResult> AnalyzeVideo([FromBody] VideoAnalysisRequest request)
+        // ĐỔI TÊN THÀNH "save" ĐỂ HẾT LỖI 404
+        [HttpPost("save")]
+        public async Task<IActionResult> SaveVideo([FromBody] VideoSaveRequest request)
         {
-            if (string.IsNullOrEmpty(request.Transcript))
-                return BadRequest("Transcript cannot be empty.");
+            if (request == null || string.IsNullOrEmpty(request.Summary))
+                return BadRequest("Dữ liệu không hợp lệ.");
 
             try
             {
-                // --- BƯỚC 1: GỬI DỮ LIỆU SANG PYTHON AI SERVICE ---
-                var pythonServiceUrl = "http://127.0.0.1:8000/ai/process";
-                var client = _httpClientFactory.CreateClient();
-
-                // Gửi request sang Python
-                var response = await client.PostAsJsonAsync(pythonServiceUrl, request);
-
-                string aiSummary = "";
-
-                if (response.IsSuccessStatusCode)
-                {
-                    // Đọc kết quả từ Python (phần ai_analysis mà bạn viết ở main.py)
-                    var aiResponse = await response.Content.ReadFromJsonAsync<PythonAIResponse>();
-                    aiSummary = aiResponse?.ai_analysis ?? "Không có phản hồi từ AI.";
-                }
-                else
-                {
-                    aiSummary = "Lỗi: Không thể kết nối với AI Service.";
-                }
-
-                // --- BƯỚC 2: LƯU VÀO DATABASE MYSQL ---
+                // Chỉ việc lưu dữ liệu mà Extension gửi sang
                 var videoEntity = new Video
                 {
                     VideoId = request.VideoId,
                     Title = request.Title,
-                    Transcript = request.Transcript,
-                    Summary = aiSummary, // Lưu bản tóm tắt THẬT từ Gemini
+                    Summary = request.Summary, // Đây là summary AI từ Python gửi qua Extension
+                    Transcript = "", // Có thể để trống nếu Extension không gửi
                     CreatedAt = DateTime.Now
                 };
 
                 _context.Videos.Add(videoEntity);
                 await _context.SaveChangesAsync();
 
-                // --- BƯỚC 3: TRẢ KẾT QUẢ VỀ CHO EXTENSION ---
-                return Ok(new
-                {
-                    Message = "AI đã xử lý và lưu thành công!",
-                    VideoDbId = videoEntity.Id,
-                    Summary = aiSummary
-                });
+                return Ok(new { message = "C# đã lưu thành công vào MySQL!" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Lỗi hệ thống: {ex.Message}");
+                return StatusCode(500, $"Lỗi lưu Database: {ex.Message}");
             }
         }
+
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory()
         {
@@ -89,6 +63,7 @@ namespace YoutubeLearningAssistant.Api.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
+
         [HttpDelete("clear-all")]
         public async Task<IActionResult> ClearAllHistory()
         {
@@ -106,10 +81,14 @@ namespace YoutubeLearningAssistant.Api.Controllers
         }
     }
 
-    // Class phụ để hứng dữ liệu từ Python trả về
-    public class PythonAIResponse
+    // Class hứng dữ liệu phải khớp với JSON từ popup.js gửi sang
+    public class VideoSaveRequest
     {
-        public string status { get; set; }
-        public string ai_analysis { get; set; }
+        [JsonPropertyName("videoId")]
+        public string VideoId { get; set; }
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+        [JsonPropertyName("summary")]
+        public string Summary { get; set; }
     }
 }

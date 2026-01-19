@@ -30,7 +30,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowExtension");
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
