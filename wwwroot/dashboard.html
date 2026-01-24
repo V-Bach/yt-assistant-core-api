@@ -257,6 +257,13 @@
                                         <div class="summary-content">${renderedSummary}</div>
                                     </div>
                                 </div>`;
+
+                    const card = `
+                                <div class="card video-card">
+                                    <div class="mt-3">
+                                        <a href="http://localhost:5104/api/video/export-pdf/${video.id}" class="btn btn-sm btn-outline-danger" target="_blank"> 📥 Tải PDF Tóm Tắt </a>
+                                    </div>
+                                </div>`;
                     list.innerHTML += card;
                 });
 
