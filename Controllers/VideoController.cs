@@ -4,6 +4,9 @@ using System.Net.Http.Json;
 using YoutubeLearningAssistant.Api.Data;
 using YoutubeLearningAssistant.Api.Models;
 using System.Text.Json.Serialization;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace YoutubeLearningAssistant.Api.Controllers
 {
@@ -77,7 +80,56 @@ namespace YoutubeLearningAssistant.Api.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
+
+        [HttpGet("export-pdf/{id}")]
+        public async Task<IActionResult> ExportPdf(int id)
+        {
+            var video = await _context.Videos.FindAsync(id);
+
+            if (video == null)
+                return NotFound(new { message = "Không tìm thấy video này bro ơi!" });
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(50);
+                    page.Size(PageSizes.A4);
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(12).FontFamily("Arial"));
+                    page.Header().Row(row =>
+                    {
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text("BẢN TÓM TẮT KIẾN THỨC").FontSize(20).SemiBold().FontColor(Colors.Blue.Medium);
+                            col.Item().Text($"{video.Title}").FontSize(14).Italic();
+                        });
+                    });
+
+                    page.Content().PaddingVertical(20).Column(col =>
+                    {
+                        col.Item().Text($"Ngày học: {video.CreatedAt:dd/MM/yyyy HH:mm}").FontSize(10).FontColor(Colors.Grey.Medium);
+                        col.Item().PaddingTop(10).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+
+                        col.Item().PaddingTop(15).Text("NỘI DUNG CHI TIẾT").Bold().FontSize(14);
+
+                        col.Item().PaddingTop(10).Text(video.Summary);
+                    });
+
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("Trang ");
+                        x.CurrentPageNumber();
+                    });
+                });
+            });
+
+            byte[] pdfBytes = document.GeneratePdf();
+
+            return File(pdfBytes, "application/pdf", $"{video.VideoId}_Summary.pdf");
+        }
     }
+
     public class VideoSaveRequest
     {
         [JsonPropertyName("videoId")]
