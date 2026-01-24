@@ -18,7 +18,6 @@ namespace YoutubeLearningAssistant.Api.Controllers
             _context = context;
         }
 
-        // ĐỔI TÊN THÀNH "save" ĐỂ HẾT LỖI 404
         [HttpPost("save")]
         public async Task<IActionResult> SaveVideo([FromBody] VideoSaveRequest request)
         {
@@ -27,13 +26,12 @@ namespace YoutubeLearningAssistant.Api.Controllers
 
             try
             {
-                // Chỉ việc lưu dữ liệu mà Extension gửi sang
                 var videoEntity = new Video
                 {
                     VideoId = request.VideoId,
                     Title = request.Title,
-                    Summary = request.Summary, // Đây là summary AI từ Python gửi qua Extension
-                    Transcript = "", // Có thể để trống nếu Extension không gửi
+                    Summary = request.Summary, 
+                    Transcript = "",
                     CreatedAt = DateTime.Now
                 };
 
@@ -80,8 +78,6 @@ namespace YoutubeLearningAssistant.Api.Controllers
             }
         }
     }
-
-    // Class hứng dữ liệu phải khớp với JSON từ popup.js gửi sang
     public class VideoSaveRequest
     {
         [JsonPropertyName("videoId")]
