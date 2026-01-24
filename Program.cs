@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using YoutubeLearningAssistant.Api.Data;
 using System.Text;
+using QuestPDF.Infrastructure;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
