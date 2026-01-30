@@ -134,8 +134,10 @@ namespace YoutubeLearningAssistant.Api.Controllers
     {
         [JsonPropertyName("videoId")]
         public string VideoId { get; set; }
+
         [JsonPropertyName("title")]
         public string Title { get; set; }
+
         [JsonPropertyName("summary")]
         public string Summary { get; set; }
     }
